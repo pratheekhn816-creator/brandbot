@@ -286,6 +286,7 @@
         margin-inline-start: -40px;
     }
     &-wrap {
+        -webkit-backdrop-filter: blur(14px);
         backdrop-filter: blur(14px);
         background: rgba(76, 76, 76, 0.06);
     }
@@ -564,6 +565,7 @@
             } 
             &.blue {
                 background: rgba(255, 255, 255, 0.05);
+                -webkit-backdrop-filter: blur(25px);
                 backdrop-filter: blur(25px);
                 border: 1px solid rgba(255, 255, 255, 0.32);
             }

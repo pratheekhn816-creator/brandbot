@@ -67,7 +67,7 @@
             if (!hasVideo && !isIOSDevice) {
                 preloader.innerHTML = `
                     <video class="preloader-video" autoplay muted playsinline preload="auto">
-                        <source src="assets/videos/Loading_Page.mp4" type="video/mp4">
+                        <source src="assets/videos/Loading_Page.webm" type="video/webm">
                     </video>
                 `;
             }

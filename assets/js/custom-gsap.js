@@ -222,12 +222,13 @@ let otherSections = document.querySelectorAll('.portfolio-panel');
 const portfolioMatch = gsap.matchMedia();
 
 function initPortfolioPanels(startPoint, endPoint, scrubAmount) {
-    // On iOS devices, avoid the pinned/scrubbed panel scaling animations to prevent jank.
-    if (isIOSDevice) {
-        gsap.set(otherSections, { scale: 1 });
-        
-    }
     gsap.set(otherSections, { scale: 1 });
+    // On iOS devices, skip the pinned/scrubbed panel scaling animations entirely —
+    // ScrollTrigger's pin + scrub combined with Safari's dynamic viewport/URL-bar
+    // resize causes the panels to jump and jank on mobile Safari.
+    if (isIOSDevice) {
+        return;
+    }
     otherSections.forEach((section) => {
         tl.to(section, {
             scale: .8,
