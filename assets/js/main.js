@@ -29,6 +29,36 @@
             /iPad|iPhone|iPod/.test(navigator.userAgent) ||
             (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
+        // Debug helper: show a brief overlay and console message when preloader issues occur.
+        // Shared by ensureVideoPreloader and initVideoPreloader.
+        const reportPreloaderIssue = (message) => {
+            try {
+                console.warn('Preloader:', message);
+                let dbg = document.querySelector('.preloader-debug');
+                if (!dbg) {
+                    dbg = document.createElement('div');
+                    dbg.className = 'preloader-debug';
+                    dbg.style.position = 'fixed';
+                    dbg.style.left = '12px';
+                    dbg.style.bottom = '12px';
+                    dbg.style.zIndex = '99999';
+                    dbg.style.padding = '8px 12px';
+                    dbg.style.background = 'rgba(0,0,0,0.7)';
+                    dbg.style.color = '#fff';
+                    dbg.style.fontSize = '12px';
+                    dbg.style.borderRadius = '6px';
+                    dbg.style.maxWidth = '60vw';
+                    dbg.style.boxShadow = '0 2px 8px rgba(0,0,0,0.5)';
+                    dbg.style.opacity = '0';
+                    dbg.style.transition = 'opacity 0.35s ease';
+                    document.body.appendChild(dbg);
+                }
+                dbg.textContent = message;
+                dbg.style.opacity = '1';
+                setTimeout(() => { try { dbg.style.opacity = '0'; } catch (e) {} }, 5000);
+            } catch (e) { /* ignore */ }
+        };
+
         const ensureVideoPreloader = () => {
             const preloader = document.querySelector(".preloader");
             if (!preloader) return null;
@@ -106,7 +136,8 @@
                     } catch (e) { console.warn(e); }
                 };
                 imgEl.onload = function () {
-                    reportPreloaderIssue('logo loaded: ' + (imgEl.src || '').split('/').pop());
+                    // success — log quietly, no visible debug toast
+                    try { console.info('Preloader: logo loaded: ' + (imgEl.src || '').split('/').pop()); } catch (e) {}
                 };
             } catch (e) { /* ignore */ }
 
@@ -117,35 +148,6 @@
             const preloader = ensureVideoPreloader();
             if (!preloader) return;
             const preloaderVideo = preloader.querySelector(".preloader-video");
-
-            // Debug helper: show a brief overlay and console message when preloader issues occur
-            const reportPreloaderIssue = (message) => {
-                try {
-                    console.warn('Preloader:', message);
-                    let dbg = document.querySelector('.preloader-debug');
-                    if (!dbg) {
-                        dbg = document.createElement('div');
-                        dbg.className = 'preloader-debug';
-                        dbg.style.position = 'fixed';
-                        dbg.style.left = '12px';
-                        dbg.style.bottom = '12px';
-                        dbg.style.zIndex = '99999';
-                        dbg.style.padding = '8px 12px';
-                        dbg.style.background = 'rgba(0,0,0,0.7)';
-                        dbg.style.color = '#fff';
-                        dbg.style.fontSize = '12px';
-                        dbg.style.borderRadius = '6px';
-                        dbg.style.maxWidth = '60vw';
-                        dbg.style.boxShadow = '0 2px 8px rgba(0,0,0,0.5)';
-                        dbg.style.opacity = '0';
-                        dbg.style.transition = 'opacity 0.35s ease';
-                        document.body.appendChild(dbg);
-                    }
-                    dbg.textContent = message;
-                    dbg.style.opacity = '1';
-                    setTimeout(() => { try { dbg.style.opacity = '0'; } catch (e) {} }, 5000);
-                } catch (e) { /* ignore */ }
-            };
 
             document.documentElement.classList.add("preloader-active");
             document.body.style.overflow = "hidden";
