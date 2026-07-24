@@ -1,11 +1,9 @@
 User-agent: *
 Allow: /
 
-# Block assets from being indexed
-Disallow: /assets/
-
-# Block template demo pages
+# Block template demo pages and HTML partials
 Disallow: /index-2.html
+Disallow: /contact-info.html
 
-# Host
-Host: brandingbots.in
+# Sitemap
+Sitemap: https://brandingbots.in/sitemap.xml
