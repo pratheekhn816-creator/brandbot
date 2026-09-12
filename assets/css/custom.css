@@ -225,6 +225,22 @@ html {
     display: block;
 }
 
+/* Suppress the native "big play button" overlay mobile browsers paint on a
+   paused/negotiating-autoplay <video> — Chrome's overlay play button and
+   Safari's start-playback button are independent of the `controls`
+   attribute, so they show through during the brief window before autoplay
+   actually starts unless explicitly hidden. */
+.preloader .preloader-video::-webkit-media-controls,
+.preloader .preloader-video::-webkit-media-controls-panel,
+.preloader .preloader-video::-webkit-media-controls-play-button,
+.preloader .preloader-video::-webkit-media-controls-start-playback-button,
+.preloader .preloader-video::-webkit-media-controls-overlay-play-button {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    -webkit-appearance: none;
+}
+
 @supports (-webkit-touch-callout: none) {
     .preloader {
         min-height: 100vh;
