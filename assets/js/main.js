@@ -258,42 +258,38 @@
                     return false;
                 };
 
-                // Attempt to play and draw after short delay
-                const playPromise = preloaderVideo.play();
-                // Give video a bit more time to present animation before falling back
+                // The <video> already carries the native `autoplay` attribute, so we don't call
+                // .play() ourselves up front — an extra scripted play() on top of native autoplay
+                // can be rejected by mobile autoplay policies (NotAllowedError) even while the
+                // video is autoplaying fine natively, which was hiding a working video behind the
+                // static-image fallback. Give native autoplay a moment, then judge success by
+                // whether a frame actually drew, not by the scripted play() promise.
                 const scheduleTry = () => {
                     setTimeout(() => {
-                                if (!tryDrawOnce()) {
-                                    // If drawing failed, show stable image preloader instead of the video/fallback
-                                    if (imgPreEl) {
-                                        imgPreEl.style.display = 'flex';
-                                        imgPreEl.style.opacity = '0';
-                                        imgPreEl.style.transition = 'opacity 0.6s ease, transform 0.7s ease';
-                                        setTimeout(() => { try { imgPreEl.style.opacity = '1'; imgPreEl.style.transform = 'scale(1)'; } catch(e){} }, 20);
-                                    }
-                                    reportPreloaderIssue('canvas draw failed; showing image preloader');
-                                    videoCompleted = true;
-                                    tryHidePreloader();
-                                }
+                        if (preloaderVideo.paused) {
+                            // Native autoplay never started (Low Power Mode, user disabled
+                            // auto-play in Safari settings, etc.) — try one manual nudge.
+                            const nudge = preloaderVideo.play();
+                            if (nudge && typeof nudge.catch === 'function') {
+                                nudge.catch(() => { /* judged below via tryDrawOnce */ });
+                            }
+                        }
+                        if (!tryDrawOnce()) {
+                            // If drawing failed, show stable image preloader instead of the video/fallback
+                            if (imgPreEl) {
+                                imgPreEl.style.display = 'flex';
+                                imgPreEl.style.opacity = '0';
+                                imgPreEl.style.transition = 'opacity 0.6s ease, transform 0.7s ease';
+                                setTimeout(() => { try { imgPreEl.style.opacity = '1'; imgPreEl.style.transform = 'scale(1)'; } catch(e){} }, 20);
+                            }
+                            reportPreloaderIssue('video did not produce a frame in time; showing image preloader');
+                            videoCompleted = true;
+                            tryHidePreloader();
+                        }
                     }, 1000);
                 };
 
-                if (playPromise && typeof playPromise.then === 'function') {
-                    playPromise.then(() => scheduleTry()).catch((err) => {
-                        // Autoplay blocked or play() failed — show stable image preloader instead
-                        reportPreloaderIssue('video.play() rejected: ' + (err && err.message ? err.message : String(err)));
-                        if (imgPreEl) {
-                            imgPreEl.style.display = 'flex';
-                            imgPreEl.style.opacity = '0';
-                            imgPreEl.style.transition = 'opacity 0.6s ease, transform 0.7s ease';
-                            setTimeout(() => { try { imgPreEl.style.opacity = '1'; imgPreEl.style.transform = 'scale(1)'; } catch(e){} }, 20);
-                        }
-                        videoCompleted = true;
-                        tryHidePreloader();
-                    });
-                } else {
-                    scheduleTry();
-                }
+                scheduleTry();
             }
 
             if (!pageLoaded) {
@@ -334,17 +330,21 @@
                     }, 3000);
                 }, { once: true });
 
-                const playPromise = preloaderVideo.play();
-                if (playPromise && typeof playPromise.catch === "function") {
-                    playPromise.catch(() => {
-                        // If autoplay is blocked, don't block page access.
-                        videoCompleted = true;
-                        tryHidePreloader();
-                    });
+                // The <video> already autoplays via its native `autoplay` attribute. Calling
+                // .play() again here is redundant, and on mobile Chrome/Safari that redundant
+                // call can reject with NotAllowedError even while the video is autoplaying fine
+                // natively — treating that rejection as "video failed" was hiding a working video
+                // and skipping straight to the fallback. Only nudge with .play() if it's actually
+                // still paused, and let the paused-state check below (not the promise) decide.
+                if (preloaderVideo.paused) {
+                    const nudge = preloaderVideo.play();
+                    if (nudge && typeof nudge.catch === "function") {
+                        nudge.catch(() => { /* handled by the paused-state check below */ });
+                    }
                 }
 
-                // iOS Safari sometimes resolves play() without actually playing (autoplay blocked
-                // silently). Check 1.5 s after calling play() — if still paused, at time 0, or
+                // Some mobile browsers resolve/allow play() without actually rendering frames
+                // (autoplay blocked silently). Check 1.5 s later — if still paused, at time 0, or
                 // not loaded enough, bail out immediately.
                 setTimeout(() => {
                     if (!videoCompleted && (preloaderVideo.paused || preloaderVideo.readyState < 2 || preloaderVideo.currentTime === 0)) {
