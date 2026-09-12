@@ -64,16 +64,13 @@
             if (!preloader) return null;
 
             const hasVideo = !!preloader.querySelector(".preloader-video");
-            if (!hasVideo && !isIOSDevice) {
+            if (!hasVideo) {
                 preloader.innerHTML = `
-                    <video class="preloader-video" autoplay muted playsinline preload="auto">
+                    <video class="preloader-video" autoplay muted loop playsinline webkit-playsinline preload="auto">
                         <source src="assets/videos/Loading_Page.webm" type="video/webm">
                         <source src="assets/videos/Loading_Page.mp4" type="video/mp4">
                     </video>
                 `;
-            }
-            if (isIOSDevice) {
-                preloader.style.background = "#000";
             }
 
             preloader.style.background = "#000";
@@ -86,30 +83,37 @@
 
             const preloaderVideo = preloader.querySelector(".preloader-video");
             if (preloaderVideo) {
+                preloaderVideo.style.position = "absolute";
+                preloaderVideo.style.top = "0";
+                preloaderVideo.style.left = "0";
                 preloaderVideo.style.width = "100%";
                 preloaderVideo.style.height = "100%";
                 preloaderVideo.style.objectFit = "cover";
                 preloaderVideo.style.display = "block";
                 preloaderVideo.style.pointerEvents = "none";
+                // Stay invisible until playback is actually confirmed (see the
+                // "playing" listener in initVideoPreloader) — mobile browsers paint
+                // a native "tap to play" affordance over a paused <video>, so the
+                // video must never be shown on screen while it's still paused.
+                preloaderVideo.style.opacity = "0";
+                preloaderVideo.style.transition = "opacity 0.4s ease";
             }
 
-            let fallback = preloader.querySelector('.preloader-fallback');
-            if (!fallback) {
-                fallback = document.createElement('div');
-                fallback.className = 'preloader-fallback';
-                fallback.style.display = 'none';
-                fallback.style.pointerEvents = 'none';
-                fallback.innerHTML = '<img src="assets/images/logo/logo.png" alt="logo" />';
-                preloader.appendChild(fallback);
-            }
-
-            // Create a stronger image-based preloader (used on iOS/when video fails)
+            // Static logo shown by default and for as long as the video isn't
+            // confirmed playing — this is what the user actually sees on mobile
+            // instead of a paused video, so there's never a "play button" moment.
             let imgPre = preloader.querySelector('.preloader-image');
             if (!imgPre) {
                 imgPre = document.createElement('div');
                 imgPre.className = 'preloader-image';
-                imgPre.style.display = 'none';
+                imgPre.style.position = 'relative';
+                imgPre.style.zIndex = '10';
+                imgPre.style.display = 'flex';
+                imgPre.style.alignItems = 'center';
+                imgPre.style.justifyContent = 'center';
+                imgPre.style.opacity = '1';
                 imgPre.style.pointerEvents = 'none';
+                imgPre.style.transition = 'opacity 0.4s ease';
                 // We'll try multiple candidate logo files (handles case-sensitive deploys)
                 imgPre.innerHTML = '<img src="assets/images/logo/logo.png" alt="logo" />';
                 preloader.appendChild(imgPre);
@@ -149,6 +153,7 @@
             const preloader = ensureVideoPreloader();
             if (!preloader) return;
             const preloaderVideo = preloader.querySelector(".preloader-video");
+            const imgPreEl = preloader.querySelector(".preloader-image");
 
             document.documentElement.classList.add("preloader-active");
             document.body.style.overflow = "hidden";
@@ -160,6 +165,7 @@
             let isPreloaderHidden = false;
             let pageLoaded = document.readyState === "complete";
             let videoCompleted = !preloaderVideo;
+            let videoRevealed = false;
 
             let hidePreloader = () => {
                 if (isPreloaderHidden) return;
@@ -186,111 +192,19 @@
                 }
             };
 
-            if (isIOSDevice && preloaderVideo) {
-                // Ensure inline playback hints are present
-                preloaderVideo.setAttribute('playsinline', '');
-                preloaderVideo.setAttribute('webkit-playsinline', '');
-                preloaderVideo.setAttribute('muted', '');
-                preloaderVideo.muted = true;
-                preloaderVideo.loop = true;
-                preloaderVideo.style.opacity = '1';
-                preloaderVideo.style.position = 'absolute';
-                preloaderVideo.style.top = '0';
-                preloaderVideo.style.left = '0';
-                preloaderVideo.style.width = '100%';
-                preloaderVideo.style.height = '100%';
-                preloaderVideo.style.objectFit = 'cover';
-                preloaderVideo.style.pointerEvents = 'none';
-
-                // Create canvas overlay to draw first frame (works around native overlays on some iOS models)
-                const canvasClass = 'preloader-fallback-canvas';
-                let canvas = preloader.querySelector('.' + canvasClass);
-                if (!canvas) {
-                    canvas = document.createElement('canvas');
-                    canvas.className = canvasClass;
-                    canvas.style.display = 'none';
-                    canvas.style.opacity = '0';
-                    canvas.style.transition = 'opacity 0.6s ease';
-                    canvas.style.width = 'min(80vw, 420px)';
-                    canvas.style.height = 'auto';
-                    canvas.style.maxHeight = '100vh';
-                    canvas.style.zIndex = 11;
-                    preloader.appendChild(canvas);
-                }
-
-                const ctx = canvas.getContext && canvas.getContext('2d');
-
-                // image fallback element (already created by ensureVideoPreloader)
-                const fallback = preloader.querySelector('.preloader-fallback');
-                // stable image preloader element for iOS/production
-                const imgPreEl = preloader.querySelector('.preloader-image');
-
-                // Try to play and draw a frame — if drawing succeeds we show canvas, otherwise show image fallback
-                const tryDrawOnce = () => {
-                    if (!ctx) return false;
-                    try {
-                        const rect = preloader.getBoundingClientRect();
-                        const dpr = window.devicePixelRatio || 1;
-                        const w = Math.max(1, Math.floor(Math.min(rect.width, window.innerWidth) * dpr));
-                        const h = Math.max(1, Math.floor(Math.min(rect.height, window.innerHeight) * dpr));
-                        canvas.width = w;
-                        canvas.height = h;
-                        ctx.drawImage(preloaderVideo, 0, 0, w, h);
-                        // sample a pixel to ensure video frame drew
-                        const data = ctx.getImageData(Math.floor(w / 2), Math.floor(h / 2), 1, 1).data;
-                        const visible = (data[0] + data[1] + data[2] + data[3]) > 0;
-                        if (visible) {
-                            canvas.style.display = 'block';
-                            // fade in canvas
-                            setTimeout(() => { try { canvas.style.opacity = '1'; } catch(e){} }, 20);
-                            if (fallback) {
-                                fallback.style.opacity = '0';
-                                // hide fallback after fade
-                                setTimeout(() => { try { fallback.style.display = 'none'; } catch(e){} }, 220);
-                            }
-                            videoCompleted = true;
-                            tryHidePreloader();
-                            return true;
-                        }
-                    } catch (e) {
-                        // drawing may throw if video not allowed; ignore
-                    }
-                    return false;
-                };
-
-                // The <video> already carries the native `autoplay` attribute, so we don't call
-                // .play() ourselves up front — an extra scripted play() on top of native autoplay
-                // can be rejected by mobile autoplay policies (NotAllowedError) even while the
-                // video is autoplaying fine natively, which was hiding a working video behind the
-                // static-image fallback. Give native autoplay a moment, then judge success by
-                // whether a frame actually drew, not by the scripted play() promise.
-                const scheduleTry = () => {
-                    setTimeout(() => {
-                        if (preloaderVideo.paused) {
-                            // Native autoplay never started (Low Power Mode, user disabled
-                            // auto-play in Safari settings, etc.) — try one manual nudge.
-                            const nudge = preloaderVideo.play();
-                            if (nudge && typeof nudge.catch === 'function') {
-                                nudge.catch(() => { /* judged below via tryDrawOnce */ });
-                            }
-                        }
-                        if (!tryDrawOnce()) {
-                            // If drawing failed, show stable image preloader instead of the video/fallback
-                            if (imgPreEl) {
-                                imgPreEl.style.display = 'flex';
-                                imgPreEl.style.opacity = '0';
-                                imgPreEl.style.transition = 'opacity 0.6s ease, transform 0.7s ease';
-                                setTimeout(() => { try { imgPreEl.style.opacity = '1'; imgPreEl.style.transform = 'scale(1)'; } catch(e){} }, 20);
-                            }
-                            reportPreloaderIssue('video did not produce a frame in time; showing image preloader');
-                            videoCompleted = true;
-                            tryHidePreloader();
-                        }
-                    }, 1000);
-                };
-
-                scheduleTry();
-            }
+            // Only the "playing" event (real decoded frames being rendered) reveals the
+            // video — never a play() call or its promise, since both can resolve/reject
+            // without reflecting whether the video is actually visibly playing yet. Until
+            // this fires, the static logo (visible by default) is all the user sees, so a
+            // paused video's native "tap to play" affordance is never shown on screen.
+            const revealVideo = () => {
+                if (videoRevealed || !preloaderVideo) return;
+                videoRevealed = true;
+                preloaderVideo.style.opacity = "1";
+                if (imgPreEl) imgPreEl.style.opacity = "0";
+                videoCompleted = true;
+                tryHidePreloader();
+            };
 
             if (!pageLoaded) {
                 window.addEventListener("load", () => {
@@ -301,17 +215,10 @@
 
             if (preloaderVideo) {
                 preloaderVideo.muted = true;
-                if (!isIOSDevice) {
-                    preloaderVideo.loop = false;
-                }
+                preloaderVideo.loop = true;
                 preloaderVideo.currentTime = 0;
 
-                if (!isIOSDevice) {
-                    preloaderVideo.addEventListener("ended", () => {
-                        videoCompleted = true;
-                        tryHidePreloader();
-                    }, { once: true });
-                }
+                preloaderVideo.addEventListener("playing", revealVideo);
 
                 // Hide immediately if video fails to load (network error, missing file, codec).
                 preloaderVideo.addEventListener("error", () => {
@@ -330,24 +237,20 @@
                     }, 3000);
                 }, { once: true });
 
-                // The <video> already autoplays via its native `autoplay` attribute. Calling
-                // .play() again here is redundant, and on mobile Chrome/Safari that redundant
-                // call can reject with NotAllowedError even while the video is autoplaying fine
-                // natively — treating that rejection as "video failed" was hiding a working video
-                // and skipping straight to the fallback. Only nudge with .play() if it's actually
-                // still paused, and let the paused-state check below (not the promise) decide.
-                if (preloaderVideo.paused) {
-                    const nudge = preloaderVideo.play();
-                    if (nudge && typeof nudge.catch === "function") {
-                        nudge.catch(() => { /* handled by the paused-state check below */ });
-                    }
+                // Kick off playback. The <video> already carries the native `autoplay`
+                // attribute, but explicitly calling .play() too is the only way to reliably
+                // start it on some mobile browsers. A rejected promise just means autoplay
+                // is blocked (Low Power Mode, a site-level auto-play setting, etc.) — that's
+                // fine, the logo stays on screen and the timeouts below take over.
+                const playPromise = preloaderVideo.play();
+                if (playPromise && typeof playPromise.catch === "function") {
+                    playPromise.catch(() => { /* handled by the timeouts below */ });
                 }
 
-                // Some mobile browsers resolve/allow play() without actually rendering frames
-                // (autoplay blocked silently). Check 1.5 s later — if still paused, at time 0, or
-                // not loaded enough, bail out immediately.
+                // If the video hasn't visibly started playing within 1.5 s, stop waiting on
+                // it — keep the logo on screen and let the page continue.
                 setTimeout(() => {
-                    if (!videoCompleted && (preloaderVideo.paused || preloaderVideo.readyState < 2 || preloaderVideo.currentTime === 0)) {
+                    if (!videoRevealed) {
                         videoCompleted = true;
                         pageLoaded = true;
                         hidePreloader();
