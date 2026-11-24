@@ -993,3 +993,279 @@ html {
         display: none !important;
     }
 }
+
+/* ============================================================
+   Audit fixes — 2026-11-15
+   Shared buttons, CTA card, contact form, portfolio filter,
+   legal pages, sticky mobile contact bar
+   ============================================================ */
+
+.bb-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 52px;
+    padding: 0 28px;
+    border-radius: 999px;
+    font-weight: 600;
+    border: 1px solid hsl(var(--main));
+    transition: background-color .2s ease, color .2s ease;
+    text-decoration: none;
+}
+.bb-btn--primary { background: hsl(var(--main)); color: #fff; }
+.bb-btn--primary:hover { background: #fff; color: #111; border-color: #fff; }
+.bb-btn--ghost { background: transparent; color: #fff; border-color: rgba(255, 255, 255, .45); }
+.bb-btn--ghost:hover { background: #fff; color: #111; }
+.bb-btn:focus-visible,
+.bb-filter button:focus-visible,
+.bb-enquiry-form :is(input, select, textarea):focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+.bb-cta-actions { display: flex; flex-wrap: wrap; gap: 14px; }
+
+.bb-cta-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+    padding: 48px;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, .04);
+    border: 1px solid rgba(255, 255, 255, .12);
+}
+@media (max-width: 575px) { .bb-cta-card { padding: 28px 20px; } }
+
+/* Contact page enquiry form */
+.bb-enquiry-form {
+    padding: 40px;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, .04);
+    border: 1px solid rgba(255, 255, 255, .12);
+}
+@media (max-width: 575px) { .bb-enquiry-form { padding: 24px 18px; } }
+.bb-enquiry-form label {
+    display: block;
+    margin-bottom: 8px;
+    color: #fff;
+    font-weight: 600;
+    font-size: 15px;
+}
+.bb-enquiry-form input,
+.bb-enquiry-form select,
+.bb-enquiry-form textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, .2);
+    background: rgba(0, 0, 0, .35);
+    color: #fff;
+    font-size: 16px; /* prevents iOS zoom on focus */
+}
+.bb-enquiry-form select option { color: #111; }
+.bb-enquiry-form textarea { resize: vertical; }
+.bb-enquiry-form ::placeholder { color: rgba(255, 255, 255, .5); }
+.bb-hp { position: absolute !important; left: -9999px !important; width: 1px; height: 1px; opacity: 0; }
+.bb-form-note { color: rgba(255, 255, 255, .7); font-size: 14px; }
+.bb-form-note a { color: #fff; text-decoration: underline; }
+.bb-map iframe {
+    display: block;
+    width: 100%;
+    height: 360px;
+    border: 0;
+    border-radius: 24px;
+    filter: grayscale(.4);
+}
+
+/* Portfolio filter */
+.bb-filter { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 40px; }
+.bb-filter button {
+    padding: 10px 22px;
+    border-radius: 999px;
+    border: 1px solid hsl(var(--main));
+    background: transparent;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+}
+.bb-filter button.is-active,
+.bb-filter button:hover { background: hsl(var(--main)); color: #fff; }
+
+/* Privacy policy / thank-you */
+.bb-legal { color: rgba(255, 255, 255, .85); }
+.bb-legal h2 {
+    color: #fff;
+    font-size: clamp(24px, 3vw, 32px);
+    margin: 40px 0 14px;
+}
+.bb-legal p, .bb-legal li { font-size: 17px; line-height: 1.7; }
+.bb-legal ul { list-style: disc; padding-left: 22px; margin-bottom: 16px; }
+.bb-legal li { margin-bottom: 8px; }
+.bb-legal a { color: #fff; text-decoration: underline; }
+.bb-legal-updated { color: rgba(255, 255, 255, .6); }
+
+/* Sticky mobile contact bar */
+.bb-mobile-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 990;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    background: #0d0d0d;
+    border-top: 1px solid rgba(255, 255, 255, .12);
+    padding-bottom: env(safe-area-inset-bottom);
+}
+.bb-mobile-bar a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 9px 4px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+}
+.bb-mobile-bar a i { font-size: 20px; }
+.bb-mobile-bar a:last-child { background: hsl(var(--main)); }
+.preloader-active .bb-mobile-bar { visibility: hidden; }
+
+@media (max-width: 991px) {
+    /* the bar replaces the floating WhatsApp button on small screens */
+    .bb-float-whatsapp { display: none !important; }
+    .back-to-top-wrapper { margin-bottom: 70px; }
+    footer.footer { padding-bottom: 64px; }
+}
+
+/* ============================================================
+   Client content — 2026-11-15
+   Price boxes, pricing cards, packages, case-study story
+   ============================================================ */
+
+.bb-price-box {
+    padding: 24px 26px;
+    border-radius: 18px;
+    border: 1px solid hsl(var(--main) / .6);
+    background: hsl(var(--main) / .08);
+    color: rgba(255, 255, 255, .85);
+}
+.bb-price-label {
+    display: block;
+    font-size: 13px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, .6);
+}
+.bb-price-amount {
+    display: block;
+    margin: 4px 0 8px;
+    font-family: var(--heading-font);
+    font-size: clamp(40px, 5vw, 56px);
+    line-height: 1;
+    color: #fff;
+}
+.bb-price-list { list-style: none; padding: 0; margin: 12px 0 16px; }
+.bb-price-list li { margin-bottom: 12px; }
+.bb-price-list strong { display: block; color: #fff; }
+.bb-price-list span { display: block; font-size: 15px; }
+.bb-price-note { margin-top: 12px; font-size: 14px; color: rgba(255, 255, 255, .65); }
+.bb-price-note a { color: #fff; text-decoration: underline; }
+
+.bb-price-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 100%;
+    padding: 26px;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, .12);
+    background: rgba(255, 255, 255, .04);
+    color: #fff;
+    transition: border-color .2s ease, transform .2s ease;
+}
+.bb-price-card:hover { border-color: hsl(var(--main)); transform: translateY(-3px); color: #fff; }
+.bb-price-card-name { font-weight: 700; font-size: 18px; }
+.bb-price-card-amount { font-family: var(--heading-font); font-size: 44px; line-height: 1; }
+.bb-price-card-amount small, .bb-pkg-price small {
+    font-family: var(--body-font);
+    font-size: 14px;
+    color: rgba(255, 255, 255, .6);
+}
+.bb-price-card-inc { font-size: 15px; color: rgba(255, 255, 255, .7); }
+
+.bb-pkg {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 34px 30px;
+    border-radius: 22px;
+    border: 1px solid rgba(255, 255, 255, .14);
+    background: rgba(255, 255, 255, .04);
+}
+.bb-pkg--popular { border-color: hsl(var(--main)); background: hsl(var(--main) / .1); }
+.bb-pkg-badge {
+    position: absolute;
+    top: -13px;
+    left: 30px;
+    padding: 4px 14px;
+    border-radius: 999px;
+    background: hsl(var(--main));
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+}
+.bb-pkg-name { color: #fff; font-size: 28px; text-transform: uppercase; margin-bottom: 4px; }
+.bb-pkg-price { font-family: var(--heading-font); font-size: 52px; line-height: 1; color: #fff; margin-bottom: 20px; }
+.bb-pkg ul { list-style: none; padding: 0; margin: 0 0 26px; flex: 1; }
+.bb-pkg li {
+    position: relative;
+    padding-left: 24px;
+    margin-bottom: 10px;
+    color: rgba(255, 255, 255, .85);
+}
+.bb-pkg li::before {
+    content: "+";
+    position: absolute;
+    left: 0;
+    color: hsl(var(--main));
+    font-weight: 700;
+}
+
+/* Case study story */
+.bb-case-study { color: rgba(255, 255, 255, .85); }
+.bb-cs-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 26px; }
+.bb-cs-tag {
+    padding: 6px 16px;
+    border-radius: 999px;
+    border: 1px solid hsl(var(--main));
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+}
+.bb-cs-lead { font-size: clamp(19px, 2vw, 23px); line-height: 1.6; color: #fff; }
+.bb-cs-h { color: #fff; font-size: clamp(30px, 3.4vw, 44px); text-transform: uppercase; margin: 44px 0 14px; }
+.bb-case-study p, .bb-cs-list li { font-size: 17px; line-height: 1.7; }
+.bb-cs-list { list-style: none; padding: 0; }
+.bb-cs-list li { position: relative; padding-left: 26px; margin-bottom: 14px; }
+.bb-cs-list li::before { content: "+"; position: absolute; left: 0; color: hsl(var(--main)); font-weight: 700; }
+.bb-cs-list strong { color: #fff; }
+.bb-cs-quote {
+    margin: 48px 0 0;
+    padding: 28px 30px;
+    border-left: 3px solid hsl(var(--main));
+    border-radius: 0 18px 18px 0;
+    background: rgba(255, 255, 255, .04);
+}
+.bb-cs-quote p { font-size: 20px; color: #fff; margin-bottom: 12px; }
+.bb-cs-quote cite { font-style: normal; font-weight: 700; color: rgba(255, 255, 255, .7); }
+.bb-book-box { padding-top: 6px; }
+
+/* Theme forces 140px under every list in service sections; tighten it where a price box follows */
+.service-details-area:has(.bb-price-box) ul { margin-bottom: 24px !important; }
+.service-details-area .bb-price-list li { font-size: inherit; }
+.service-details-area .bb-price-box { margin-bottom: 120px !important; }
