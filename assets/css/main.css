@@ -16500,13 +16500,6 @@ li:hover > .mega-menu {
     padding: 0 !important;
 }
 
-/* Hide blog menu links in navbar/footer */
-a[href*="blog"],
-a[href*="blog.html"],
-li.menu-item-has-children a[href*="blog"] {
-    display: none !important;
-}
-
 /* Hide blog breadcrumb/page title sections */
 .page-title-blog,
 .breadcrumb-blog,
